@@ -54,6 +54,6 @@ app.get('/posts/:value',(req,res)=>{
     res.render('post',{post : post || {postTitle:'No Such Posts', postData:'Check your request again'}})
 })
 
-app.listen(3020, function() {
+app.listen(process.env.PORT ||3000, function() {
   console.log("Server started on port 3000");
 });
