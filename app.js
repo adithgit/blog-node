@@ -45,18 +45,15 @@ app.post('/compose',(req,res)=>{
 })
 
 app.get('/posts/:value',(req,res)=>{
-  const match =  posts.find(  element =>
-     lodash.lowerCase( element.postTitle ) == lodash.lowerCase( req.params.value )
-    );
-
-  if(match != null){
-    console.log("Match found");
-  }
-  else{
-    console.log("No match");
-  }
+  const post =  posts.find(  element => {
+    if(lodash.lowerCase( element.postTitle ) == lodash.lowerCase( req.params.value )){
+      return element;
+    }
+  });
+  
+    res.render('post',{post : post || {postTitle:'No Such Posts', postData:'Check your request again'}})
 })
 
-app.listen(3000, function() {
+app.listen(3020, function() {
   console.log("Server started on port 3000");
 });
