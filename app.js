@@ -3,23 +3,31 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
+const mongoose = require('mongoose');
 const lodash = require('lodash');
-const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
-const aboutContent = "Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.";
-const contactContent = "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
-
+const homeStartingContent = "Hey, This is a blog wesbite . You can add a blog by just adding /compose to the url of the website. This is completely free and you can do whatever you want with the blog , just dont post anything that's inappropriate as this site is not monitored and i just made it for fun. Thank You . ";
+const aboutContent = "There is nothing special about this page. I had to add something so here's some Lorem Ipsum . Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.";
+const contactContent = "You can contact me on touristm7@gmail.com . Ping me if you have cool ideas or something. ";
 const app = express();
 const posts = [];
 
 app.set('view engine', 'ejs');
-
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
+mongoose.connect('mongodb://localhost:27017/blog');
 
+const postSchema = new mongoose.Schema({
+  postTitle : String,
+  postData : String
+})
+
+const post = mongoose.model('post',postSchema)
 
 app.get('/',(req,res)=>{
-  res.render('home',{homeStartingContent , posts})
+  post.find({}, (err,result)=>{ 
+    res.render('home',{homeStartingContent , posts : result})
+  })
 });
 
 app.get('/about',(req,res)=>{
@@ -36,22 +44,30 @@ app.get('/compose',(req,res)=>{
 
 app.post('/compose',(req,res)=>{
   
-  posts.push({
-    postTitle : req.body.postTitle,
-    postData : req.body.postData
-  });
+  const postTitle = req.body.postTitle;
+  const postBody = req.body.postData;
+
+  const newPost = new post({
+    postTitle : postTitle,
+    postData : postBody
+  })
+
+  newPost.save();
 
   res.redirect('/')
 })
 
 app.get('/posts/:value',(req,res)=>{
-  const post =  posts.find(  element => {
-    if(lodash.lowerCase( element.postTitle ) == lodash.lowerCase( req.params.value )){
-      return element;
-    }
-  });
+
+  const postId =  req.params.value ;
+
+  post.findOne({ _id : postId}, (err,result)=>{
+    
+    res.render('post',{post : result || {postTitle:'No Such Posts', postData:'Check your request again'}})
+    
+  })
+
   
-    res.render('post',{post : post || {postTitle:'No Such Posts', postData:'Check your request again'}})
 })
 
 app.listen(process.env.PORT ||3000, function() {
